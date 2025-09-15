@@ -10,8 +10,24 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get('users')
-  users() {
-    return this.appService.getUsers();
+  @Get('patients')
+  patients() {
+    return this.appService.getPatients();
+  }
+
+  @Get('surgeons')
+  surgeons() {
+    return this.appService.getSurgeons();
+  }
+
+  @Get('info')
+  info() {
+    return {
+      message: 'AVF Booking System API',
+      patients: '/patients',
+      surgeons: '/surgeons',
+      bookings: '/bookings',
+      slots: '/slots',
+    };
   }
 }

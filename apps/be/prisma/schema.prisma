@@ -8,25 +8,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/* ─────────── Users (tùy dự án, không dùng auth vẫn giữ làm mẫu) ─────────── */
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  role      String   @default("USER")
-  createdAt DateTime @default(now())
+/* ─────────── Patient (bệnh nhân) ─────────── */
+model Patient {
+  id          Int       @id @default(autoincrement())
+  name        String
+  phone       String
+  diagnosis   String?   // nội dung chuẩn đoán
+  createdAt   DateTime  @default(now())
+  bookings    Booking[]
+
+  @@index([phone])
 }
 
 /* ─────────── Surgeon (bác sĩ / resource) ─────────── */
 model Surgeon {
-  id       Int       @id @default(autoincrement())
-  name     String
-  bookings Booking[]
+  id            Int       @id @default(autoincrement())
+  name          String
+  specialization String?  // chuyên khoa
+  startedYear   Int?      // năm bắt đầu hành nghề
+  bookings      Booking[]
 }
 
 /* ─────────── Booking (đặt lịch theo khoảng thời gian) ───────────
-   LƯU Ý: Không dùng unique/slot ở đây. Chống trùng giờ làm bằng
-   PostgreSQL Exclusion Constraint (thêm ở migration.sql).
+   Có unique constraint để chống race condition
 ------------------------------------------------------------------ */
 model Booking {
   id          Int      @id @default(autoincrement())
@@ -34,29 +38,24 @@ model Booking {
   surgeonId   Int
   surgeon     Surgeon  @relation(fields: [surgeonId], references: [id])
 
-  startAt     DateTime // UTC
-  endAt       DateTime // UTC; phải > startAt (check constraint ở migration.sql)
+  patientId   Int
+  patient     Patient  @relation(fields: [patientId], references: [id])
 
-  // Thông tin form (không yêu cầu đăng nhập)
-  patientName String
-  phone       String
-  diseaseType String
+  startAt     DateTime // UTC
+  endAt       DateTime // UTC; phải > startAt
+
+  // Thông tin người đặt (có thể khác với bệnh nhân)
+  bookerName  String?
+  bookerPhone String
 
   status      BookingStatus @default(PENDING)
   createdAt   DateTime      @default(now())
 
+  // Chống double booking: một bác sĩ không thể có 2 booking trùng thời gian
+  @@unique([surgeonId, startAt])
   @@index([surgeonId, startAt])
   @@index([surgeonId, endAt])
-}
-
-/* ─────────── Slot (tuỳ chọn: dùng render lưới 15’ cho UI) ───────────
-   Không ảnh hưởng đến logic chặn trùng; có thể bỏ nếu không cần.
-------------------------------------------------------------------- */
-model Slot {
-  id        Int       @id @default(autoincrement())
-  startAt   DateTime  @unique   // mỗi 15 phút một record (UTC)
-  durationM Int       @default(15)
-  createdAt DateTime  @default(now())
+  @@index([patientId])
 }
 
 enum BookingStatus {

@@ -19,8 +19,17 @@ async function bootstrap() {
     }),
   );
 
-  // cho phép frontend gọi (Next.js FE chạy port khác, ví dụ 3000)
-  app.enableCors();
+  // cho phép frontend gọi từ localhost và Cloudflare tunnel
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'https://alert-considering-receive-utilize.trycloudflare.com',
+      /\.trycloudflare\.com$/,
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
 
   // (tùy chọn) prefix cho API: http://localhost:3001/api/...
   // app.setGlobalPrefix('api');

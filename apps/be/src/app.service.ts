@@ -6,10 +6,14 @@ export class AppService {
   constructor(private prisma: PrismaService) {}
 
   getHello(): string {
-    return 'Hello World!';
+    return 'AVF Booking System API - Backend is running!';
   }
 
-  async getUsers() {
-    return this.prisma.user.findMany();
+  async getPatients() {
+    return this.prisma.patient.findMany();
+  }
+
+  async getSurgeons() {
+    return this.prisma.surgeon.findMany();
   }
 }
